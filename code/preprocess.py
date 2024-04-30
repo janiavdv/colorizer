@@ -5,6 +5,7 @@ from PIL import Image
 import tensorflow as tf
 import hyperparameters as hp
 from skimage import color
+import matplotlib.pyplot as plt
 
 class Datasets():
     """ Class for containing the training and test sets as well as
@@ -22,6 +23,8 @@ class Datasets():
 
         # Setup data generators
         # These feed data to the training and testing routine based on the dataset
+        print("DEBUG -- TRAIN FILE PATH:", os.path.join(self.data_path, "train/"))
+        print("DEBUG -- TEST FILE PATH:", os.path.join(self.data_path, "test/"))
         self.train_data = self.get_data(os.path.join(self.data_path, "train/"), True)
         self.test_data = self.get_data(os.path.join(self.data_path, "test/"), False)   
              
@@ -61,9 +64,8 @@ class Datasets():
             # Grayscale -> RGB
             if len(img.shape) == 2:
                 img = np.stack([img, img, img], axis=-1)
-
-            data_sample[i] = img
-
+            
+            data_sample[i] = img[:,:,:3]
 
         self.mean = np.mean(data_sample, axis=0)
         self.std = np.std(data_sample, axis=0)
@@ -79,15 +81,11 @@ class Datasets():
             img - numpy array of shape (image size, image size, 3)
         """
         # Calculating standardized image.
+        
+        img = img[:, :, :3]
+        
         img = (img - self.mean) / self.std
 
-        return img
-
-    def custom_preprocess_fn(self, img):
-        """ Custom preprocess function for ImageDataGenerator. """
-
-        img = img / 255.
-        img = self.standardize(img)
         return img
 
     def get_data(self, path, shuffle):
@@ -101,38 +99,45 @@ class Datasets():
         Returns:
             An iterable image-batch generator
         """
+        file_paths = []
+        for root, _, files in os.walk(path):
+            for name in files:
+                if name.endswith(".jpeg"):
+                    file_paths.append(os.path.join(root, name)) 
 
-        data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                width_shift_range=0.1,
-                height_shift_range=0.1,
-                shear_range=0.1,
-                rotation_range=15,
-                brightness_range=[0.75,1.0],
-                horizontal_flip=True,
-                preprocessing_function=self.custom_preprocess_fn
-                )
+        l_imgs = []
+        ab_imgs = []
+        for i, file_path in enumerate(file_paths):
+            img = Image.open(file_path)
+            img = img.resize((hp.img_size, hp.img_size))
+            img = np.array(img, dtype=np.float32)
+            
+            # TODO: do we need to standardize & normalize?
+            if len(img.shape) == 2:
+                img = np.stack([img, img, img], axis=-1)
+            img = self.standardize(img)
+            img /= 255
+           
+                        
+            l, ab = self.rgb_to_lab(img)
+            l_imgs.append(l)
+            ab_imgs.append(ab)
 
-        # Form image data generator from directory structure
-        data_gen = data_gen.flow_from_directory(
-            path,
-            target_size=(hp.img_size, hp.img_size),
-            class_mode='sparse',
-            batch_size=hp.batch_size,
-            shuffle=shuffle
-        )
+            # print(ab_imgs)
 
-        lab_data = self.rgb_to_lab(data_gen)
-        return lab_data
+        return [np.array(l_imgs), np.array(ab_imgs)]
 
+    def rgb_to_lab(self, rgb_img):
+        """ Converts a RGB image to Lab image
 
-    def rgb_to_lab(self, data):
-        """ Converts a set of RGB images to Lab images.
-        
         Arguments:
-            data - set of RGB images
-
+            rgb_img - rgb image matrix
+        
         Returns:
-            set of Lab images corresponding to the inputted RGB images
+            lab image, as tuple (l, ab)
         """
-        return np.array([color.rgb2lab(rgb_img) for rgb_img in data])
+        lab_img = color.rgb2lab(rgb_img)
+        l = lab_img[:, :, 0]
+        ab = lab_img[:, :, 1:]
 
+        return (l, ab)

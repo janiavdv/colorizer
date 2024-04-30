@@ -105,7 +105,7 @@ class Datasets():
                 if name.endswith(".jpeg"):
                     file_paths.append(os.path.join(root, name)) 
 
-        l_imgs = []
+        lab_imgs = []
         ab_imgs = []
         for i, file_path in enumerate(file_paths):
             img = Image.open(file_path)
@@ -120,12 +120,9 @@ class Datasets():
            
                         
             l, ab = self.rgb_to_lab(img)
-            l_imgs.append(l)
-            ab_imgs.append(ab)
+            lab_imgs.append((l, ab))
 
-            # print(ab_imgs)
-
-        return [np.array(l_imgs), np.array(ab_imgs)]
+        return lab_imgs
 
     def rgb_to_lab(self, rgb_img):
         """ Converts a RGB image to Lab image

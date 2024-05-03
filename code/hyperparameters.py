@@ -9,7 +9,7 @@ A critical parameter that can dramatically affect whether training
 succeeds or fails. The value for this depends significantly on which
 optimizer is used. Refer to the default learning rate parameter
 """
-learning_rate = 1e-4
+learning_rate = 1e-2
 
 """
 Momentum on the gradient (if you use a momentum-based optimizer)
@@ -19,7 +19,7 @@ momentum = 0.01
 """
 Resize image size.
 """
-img_size = 224
+img_size = 256
 
 """
 Sample size for calculating the mean and standard deviation of the
@@ -38,5 +38,10 @@ max_num_weights = 10
 """
 Defines the number of training examples per batch.
 """
-batch_size = 10
+batch_size = 64
 
+
+train_length = 328500
+test_length = 36500
+steps_per_epoch = (train_length // batch_size) // 20
+validation_steps = (test_length // batch_size) // 20

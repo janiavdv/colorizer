@@ -1,6 +1,7 @@
 import tensorflow as tf
 from keras.layers import \
-    Conv2D, Conv2DTranspose, Rescaling, Dropout, Flatten, Dense, BatchNormalization
+    Conv2D, MaxPool2D, UpSampling2D, Conv2DTranspose, Rescaling, Reshape, Dropout, Flatten, Dense, BatchNormalization
+from keras.applications import ResNet50V2
 
 import hyperparameters as hp
 
@@ -11,53 +12,38 @@ class Model(tf.keras.Model):
         super(Model, self).__init__()
         
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=hp.learning_rate)
-        
-        self.architecture = [
-            # output: 112 x 112 x 64
-            Conv2D(64, (3,3), activation='relu', strides=(2,2),padding='same'), 
-            Conv2D(64, (3,3), activation='relu', strides=(2,2),padding='same'), 
-            BatchNormalization(),
-
-            # output: 56 x 56 x 128
-            Conv2D(128, (3,3), activation='relu', strides=(2,2),padding='same'), 
-            Conv2D(128, (3,3), activation='relu', strides=(2,2),padding='same'), 
-            BatchNormalization(),
-            
-            # output: 28 x 28 x 256
-            Conv2D(256, (3,3), activation='relu', strides=(2,2),padding='same'), 
-            Conv2D(256, (3,3), activation='relu', strides=(2,2),padding='same'), 
-            BatchNormalization(),
-
-            # output: 28 x 28 x 512
-            Conv2D(512, (3,3), activation='relu', strides=(2,2),padding='same'), 
-            Conv2D(512, (3,3), activation='relu', strides=(2,2),padding='same'), 
-            BatchNormalization(),
-
-            # output: 28 x 28 x 512
-            Conv2D(512, (3,3), activation='relu', strides=(1,1),padding='same'), 
-            Conv2D(512, (3,3), activation='relu', strides=(1,1),padding='same'), 
-            BatchNormalization(),
+        self.resnet = ResNet50V2(
+            include_top=False,
+            weights="imagenet",
+            input_shape=(hp.img_size, hp.img_size, 3),
+        )
+        for layer in self.resnet.layers:
+            layer.trainable = False
 
 
-            # output: 28 x 28 x 512
-            Conv2D(512, (3,3), activation='relu', strides=(1,1),padding='same'), 
-            Conv2D(512, (3,3), activation='relu', strides=(1,1),padding='same'), 
+        self.head = [ 
+            Conv2DTranspose(256, 3, 2, activation="relu", padding="same"),
             BatchNormalization(),
-
-            # output: 56 x 56 x 256
-            Conv2D(256, (3,3), activation='relu', strides=(1,1),padding='same'), 
-            Conv2D(256, (3,3), activation='relu', strides=(1,1),padding='same'), 
+            Conv2DTranspose(128, 3, 2, activation="relu", padding="same"),
             BatchNormalization(),
+            Conv2DTranspose(64, 3, 2, activation="relu", padding="same"),
+            BatchNormalization(),
+            Conv2DTranspose(32, 3, 2, activation="relu", padding="same"),
+            BatchNormalization(),
+            Conv2DTranspose(16, 3, 2, activation="relu", padding="same"),
+            BatchNormalization(),
+            Conv2DTranspose(2, 3, activation="sigmoid", padding="same"),
+            Rescaling(scale=255.0, offset=-128)
+        ]
 
-            Conv2DTranspose(2, 3, strides=1, activation="relu", padding="same"),
-            Rescaling(scale=255.0, offset=-128),
-        ] 
-        
+        # Don't change the below:
+        self.resnet = tf.keras.Sequential(self.resnet, name="resnet_base")
+        self.head = tf.keras.Sequential(self.head, name="resnet_head")
         
     def call(self, x):
         """ Passes input image through the network. """
-        for layer in self.architecture:
-            x = layer(x)
+        x = self.resnet(x)
+        x = self.head(x)
 
         return x
 

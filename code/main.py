@@ -12,14 +12,13 @@ import argparse
 import re
 from datetime import datetime
 import tensorflow as tf
-
+import keras
 import hyperparameters as hp
 from model import Model
-from preprocess import Datasets
+from preprocess import Datasets, JDatasets
 from tensorboard_utils import CustomModelSaver
 
-from matplotlib import pyplot as plt
-import keras
+INPUT_SHAPE = (hp.img_size, hp.img_size, 1)
 
 def parse_args():
     """ Perform command-line argument parsing. """
@@ -31,7 +30,7 @@ def parse_args():
     
     parser.add_argument(
         '--data',
-        default='..'+os.sep+'data'+os.sep,
+        default='..'+os.sep+'places'+os.sep,
         help='Location where the dataset is stored.'
     )
     
@@ -67,14 +66,14 @@ def train(model, datasets, checkpoint_path="checkpoints/", logs_path="logs/", in
     ]
 
     # Begin training
-    model.fit(
-        x=datasets.train_data,
-        validation_data=datasets.test_data,
-        epochs=hp.num_epochs,
-        initial_epoch=init_epoch,
-        callbacks=callback_list
-    ) # TODO: do we need to specify batch size here?
-
+    model.fit(datasets.train_data,
+          batch_size=hp.batch_size,
+          epochs=hp.num_epochs,
+          validation_data=datasets.test_data,
+          steps_per_epoch=hp.steps_per_epoch,
+          validation_steps=hp.validation_steps,
+          callbacks=callback_list
+          )
 
 def test(model, test_data):
     """ Testing routine. """
@@ -93,43 +92,30 @@ def main():
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
     init_epoch = 0
 
-    # If loading from a checkpoint, the loaded checkpoint's directory
-    # will be used for future checkpoints
-    if ARGS.load_checkpoint:
-        ARGS.load_checkpoint = os.path.abspath(ARGS.load_checkpoint)
-
-        # Get timestamp and epoch from filename
-        regex = r"(?:.+)(?:\.e)(\d+)(?:.+)(?:.h5)"
-        init_epoch = int(re.match(regex, ARGS.load_checkpoint).group(1)) + 1
-        timestamp = os.path.basename(os.path.dirname(ARGS.load_checkpoint))
-
-    datasets = Datasets(ARGS.data)
-
+    datasets = JDatasets(ARGS.data)
+    print("Datasets compiled")
     model = Model()
-    model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
     checkpoint_path = "checkpoints" + os.sep + \
-        "model" + os.sep + timestamp + os.sep
-    logs_path = "logs" + os.sep + "model" + \
+        "resnet_model" + os.sep + timestamp + os.sep
+    logs_path = "logs" + os.sep + "resnet_model" + \
         os.sep + timestamp + os.sep
+    model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
 
-    # Print summary of model
-    # model.summary()
+        # Print summaries for both parts of the model
+    model.resnet.summary()
+    model.head.summary()
 
-    # Load checkpoints
-    if ARGS.load_checkpoint:
-        model.load_weights(ARGS.load_checkpoint, by_name=False)
-
+    if not os.path.exists(checkpoint_path):
+        os.makedirs(checkpoint_path)
     # Compile model graph
     model.compile(
         optimizer=model.optimizer,
         loss=model.loss_fn,
         metrics=[keras.metrics.MeanSquaredError()]
     )
-
-    if ARGS.evaluate:
-        test(model, datasets.test_data)
-    else:
-        train(model, datasets, checkpoint_path, logs_path, init_epoch)
+    print("Model Compiled, beginning training.")
+    model.summary()
+    train(model, datasets, checkpoint_path, logs_path, init_epoch)
 
 # Make arguments global
 ARGS = parse_args()

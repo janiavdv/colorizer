@@ -25,7 +25,7 @@ class Model():
         # block2_conv2 (Conv2D)       (None, 112, 112, 128)     147584       
         # block1_conv2 (Conv2D)       (None, 224, 224, 64)      36928   
 
-        self.mod = self.vgg19.output
+        self.mod = vgg19.output
 
         b = Conv2DTranspose(filters=256, kernel_size=3, strides=2, activation="relu", padding="same")(self.mod)
         b = BatchNormalization()(b)

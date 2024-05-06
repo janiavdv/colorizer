@@ -27,7 +27,7 @@ class Model():
 
         self.mod = vgg19.output
 
-        b = Conv2DTranspose(filters=256, kernel_size=3, strides=2, activation="relu", padding="same")(self.mod)
+        b = Conv2DTranspose(filters=512, kernel_size=3, strides=2, activation="relu", padding="same")(self.mod)
         b = BatchNormalization()(b)
         self.mod = concatenate([b, vgg19.get_layer("block5_conv4").output])
 

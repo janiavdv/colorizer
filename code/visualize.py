@@ -15,8 +15,6 @@ model = Model()
 model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
 model.load_weights(checkpoint)
 
-
-
 def test(image_path, out_dir="output"):
     """
     Tests the model on image at path.
@@ -41,7 +39,6 @@ def test(image_path, out_dir="output"):
     print(image_rgb_predicted)
     # Create a single row plot
     fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-
     # Plot each image
     axs[0].imshow(image_l / 100.0)
     axs[0].set_title('Image L')
@@ -55,9 +52,13 @@ def test(image_path, out_dir="output"):
     plt.tight_layout()
     plt.show()
 
-
+    plt.imshow(image_ab[:, :, 0], cmap="gray")
+    plt.show()
 
 def clear(plt):
+    """
+    Clear the plot.
+    """
     plt.figure().clear()
     plt.close()
     plt.cla()
@@ -67,6 +68,4 @@ def clear(plt):
 """
 Usage: python visualize.py
 """
-# visualize_images = range(1, 36501)
-# visualize_images = np.random.choice(visualize_images, 50, replace=False)
-test("test_imag.jpg")
+test("test_img.jpg")

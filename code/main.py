@@ -94,27 +94,24 @@ def main():
 
     datasets = JDatasets(ARGS.data)
     print("Datasets compiled")
-    model = Model()
+    model = Model().mod
     checkpoint_path = "checkpoints" + os.sep + \
         "resnet_model" + os.sep + timestamp + os.sep
     logs_path = "logs" + os.sep + "resnet_model" + \
         os.sep + timestamp + os.sep
-    model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
-
-        # Print summaries for both parts of the model
-    model.resnet.summary()
-    model.head.summary()
+    
+    # Print summaries for both parts of the model
+    model.summary()
 
     if not os.path.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
     # Compile model graph
     model.compile(
-        optimizer=model.optimizer,
-        loss=model.loss_fn,
+        optimizer=tf.keras.optimizers.Adam(learning_rate=hp.learning_rate),
+        loss="mean_squared_error",
         metrics=[keras.metrics.MeanSquaredError()]
     )
     print("Model Compiled, beginning training.")
-    model.summary()
     train(model, datasets, checkpoint_path, logs_path, init_epoch)
 
 # Make arguments global

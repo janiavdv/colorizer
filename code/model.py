@@ -1,54 +1,55 @@
-import tensorflow as tf
+import keras
 from keras.layers import \
-    Conv2D, MaxPool2D, UpSampling2D, Conv2DTranspose, Rescaling, Reshape, Dropout, Flatten, Dense, BatchNormalization
-from keras.applications import ResNet50V2
-
+     concatenate, Conv2DTranspose, Rescaling, BatchNormalization
+from keras.applications import VGG19
 import hyperparameters as hp
 
-IMG_SIZE = hp.img_size
-
-class Model(tf.keras.Model):
+class Model():
     def __init__(self):
-        super(Model, self).__init__()
         
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=hp.learning_rate)
-        self.resnet = ResNet50V2(
+        inp = keras.Input(shape=(hp.img_size, hp.img_size, 3))
+        
+        vgg19 = VGG19(
             include_top=False,
             weights="imagenet",
             input_shape=(hp.img_size, hp.img_size, 3),
+            input_tensor = inp
         )
-        for layer in self.resnet.layers:
+
+        for layer in vgg19.layers:
             layer.trainable = False
 
+        # block5_conv4 (Conv2D)       (None, 14, 14, 512)       2359808   
+        # block4_conv4 (Conv2D)       (None, 28, 28, 512)       2359808 
+        # block3_conv4 (Conv2D)       (None, 56, 56, 256)       590080 
+        # block2_conv2 (Conv2D)       (None, 112, 112, 128)     147584       
+        # block1_conv2 (Conv2D)       (None, 224, 224, 64)      36928   
 
-        self.head = [ 
-            Conv2DTranspose(256, 3, 2, activation="relu", padding="same"),
-            BatchNormalization(),
-            Conv2DTranspose(128, 3, 2, activation="relu", padding="same"),
-            BatchNormalization(),
-            Conv2DTranspose(64, 3, 2, activation="relu", padding="same"),
-            BatchNormalization(),
-            Conv2DTranspose(32, 3, 2, activation="relu", padding="same"),
-            BatchNormalization(),
-            Conv2DTranspose(16, 3, 2, activation="relu", padding="same"),
-            BatchNormalization(),
-            Conv2DTranspose(2, 3, activation="sigmoid", padding="same"),
-            Rescaling(scale=255.0, offset=-128)
+        self.mod = self.vgg19.output
+
+        b = Conv2DTranspose(filters=256, kernel_size=3, strides=2, activation="relu", padding="same")(self.mod)
+        b = BatchNormalization()(b)
+        self.mod = concatenate([b, vgg19.get_layer("block5_conv4").output])
+
+        block_layer_sizes = [
+            (512, "block4_conv4"),
+            (256, "block3_conv4"),
+            (128, "block2_conv2"),
+            (64, "block1_conv2")
         ]
 
-        # Don't change the below:
-        self.resnet = tf.keras.Sequential(self.resnet, name="resnet_base")
-        self.head = tf.keras.Sequential(self.head, name="resnet_head")
+        for filters, layer_name in block_layer_sizes:
+            b = Conv2DTranspose(filters=filters, kernel_size=3, strides=1, activation="relu", padding="same")(self.mod)
+            b = BatchNormalization()(b)
+            b = Conv2DTranspose(filters=filters, kernel_size=3, strides=2, activation="relu", padding="same")(b)
+            b = BatchNormalization()(b)
+           
+            self.mod = concatenate([b, vgg19.get_layer(layer_name).output])
         
-    def call(self, x):
-        """ Passes input image through the network. """
-        x = self.resnet(x)
-        x = self.head(x)
-
-        return x
-
-    @staticmethod
-    def loss_fn(labels, predictions):
-       """ Loss function for the model. """
-       return tf.keras.losses.MSE(labels, predictions)
         
+        # Final resizing.
+        self.mod = Conv2DTranspose(64, 3, activation="relu", padding="same")(self.mod)
+        self.mod = Conv2DTranspose(2, 3, activation="sigmoid", padding="same")(self.mod)
+        self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)
+        self.mod = keras.Model(inputs=inp, outputs=self.mod)
+   

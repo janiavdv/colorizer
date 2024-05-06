@@ -114,7 +114,6 @@ class JDatasets:
         """
         Converts the RGB data to L+AB data.
         """
-        img_size = hp.img_size
         for im in data:
             im = im[0]
             im_lab = color.rgb2lab(im)

@@ -4,7 +4,7 @@ Homework 5 - CNNs
 CS1430 - Computer Vision
 Brown University
 
-Edited by Jania Vandevoorde for final project. 
+RGBaddies Reworked. 
 """
 
 import os
@@ -28,9 +28,7 @@ class CustomModelSaver(tf.keras.callbacks.Callback):
 
         cur_acc = logs["val_mean_squared_error"]
 
-        # Only save weights if test accuracy exceeds the previous best
-        # weight file
-        # if cur_acc > max_acc:
+        # Save all best.
         save_name = "weights.e{0:03d}-acc{1:.4f}.h5".format(
             epoch, cur_acc)
 
@@ -45,11 +43,6 @@ class CustomModelSaver(tf.keras.callbacks.Callback):
         if self.max_num_weights > 0 and \
                 num_weights + 1 > self.max_num_weights:
             os.remove(self.checkpoint_dir + os.sep + min_acc_file)
-        # else:
-        #     print(("\nEpoch {0:03d} TEST accuracy ({1:.4f}) DID NOT EXCEED "
-        #            "previous maximum TEST accuracy.\nNo checkpoint was "
-        #            "saved").format(epoch + 1, cur_acc))
-
 
     def scan_weight_files(self):
         """ Scans checkpoint directory to find current minimum and maximum

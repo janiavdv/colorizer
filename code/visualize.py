@@ -1,13 +1,10 @@
 from skimage.io import imread
 import matplotlib.pyplot as plt
-from skimage.color import rgb2lab, lab2rgb, gray2rgb, rgb2gray
+from skimage.color import rgb2lab, lab2rgb, gray2rgb
 import numpy as np
-from PIL import Image
-from tqdm import tqdm
 import hyperparameters as hp
 from model import Model
 import tensorflow as tf
-import os
 from skimage.io import imread
 
 checkpoint = "weights.e049-acc170.1781.h5"

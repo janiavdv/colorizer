@@ -4,21 +4,18 @@ Homework 5 - CNNs
 CS1430 - Computer Vision
 Brown University
 
-Edited by Jania Vandevoorde for final project. 
+RGBaddies Reworked.
 """
 
 import os
 import argparse
-import re
 from datetime import datetime
 import tensorflow as tf
 import keras
 import hyperparameters as hp
 from model import Model
-from preprocess import Datasets, JDatasets
+from preprocess import Datasets
 from tensorboard_utils import CustomModelSaver
-
-INPUT_SHAPE = (hp.img_size, hp.img_size, 1)
 
 def parse_args():
     """ Perform command-line argument parsing. """
@@ -28,11 +25,6 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
-    parser.add_argument(
-        '--data',
-        default='..'+os.sep+'places'+os.sep,
-        help='Location where the dataset is stored.'
-    )
     
     parser.add_argument(
         '--load-checkpoint',
@@ -73,11 +65,10 @@ def train(model, datasets, checkpoint_path="checkpoints/", logs_path="logs/", in
           steps_per_epoch=hp.steps_per_epoch,
           validation_steps=hp.validation_steps,
           callbacks=callback_list
-          )
+    )
 
 def test(model, test_data):
     """ Testing routine. """
-
     # Run model on test set
     model.evaluate(
         x=test_data,
@@ -92,12 +83,12 @@ def main():
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
     init_epoch = 0
 
-    datasets = JDatasets(ARGS.data)
+    datasets = Datasets('..'+os.sep+'places'+os.sep)
     print("Datasets compiled")
     model = Model().mod
     checkpoint_path = "checkpoints" + os.sep + \
-        "resnet_model" + os.sep + timestamp + os.sep
-    logs_path = "logs" + os.sep + "resnet_model" + \
+        "vgg19_model" + os.sep + timestamp + os.sep
+    logs_path = "logs" + os.sep + "vgg19_model" + \
         os.sep + timestamp + os.sep
     
     # Print summaries for both parts of the model
@@ -108,10 +99,9 @@ def main():
     # Compile model graph
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=hp.learning_rate),
-        loss="mean_squared_error",
+        loss=hp.loss_function,
         metrics=[keras.metrics.MeanSquaredError()]
     )
-    print("Model Compiled, beginning training.")
     train(model, datasets, checkpoint_path, logs_path, init_epoch)
 
 # Make arguments global

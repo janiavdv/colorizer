@@ -45,3 +45,5 @@ train_length = 328500
 test_length = 36500
 steps_per_epoch = (train_length // batch_size) // 32
 validation_steps = (test_length // batch_size) // 32
+
+loss_function = "mean_squared_error"

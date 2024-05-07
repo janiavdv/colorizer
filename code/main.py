@@ -83,7 +83,7 @@ def main():
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
     init_epoch = 0
 
-    datasets = Datasets('..'+os.sep+'places'+os.sep)
+    datasets = Datasets('..'+os.sep+'data'+os.sep)
     print("Datasets compiled")
     model = Model().mod
     checkpoint_path = "checkpoints" + os.sep + \

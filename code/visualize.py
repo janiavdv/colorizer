@@ -2,15 +2,10 @@ from skimage.io import imread
 import matplotlib.pyplot as plt
 from skimage.color import rgb2lab, lab2rgb, gray2rgb
 import numpy as np
-import hyperparameters as hp
-from model import Model
-import tensorflow as tf
 from skimage.io import imread
+from api import load_model
 
-checkpoint = "weights.e049-acc170.1781.h5"
-model = Model()
-model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
-model.load_weights(checkpoint)
+MODEL = load_model()
 
 def test(image_path, out_dir="output"):
     """
@@ -28,7 +23,7 @@ def test(image_path, out_dir="output"):
     image_a_original = image_lab[:, :, [1]]
     image_b_original = image_lab[:, :, [2]]
     # Run the model on image_l to get predicted ab channels
-    image_ab = model.predict(image_l[np.newaxis, ...])
+    image_ab = MODEL.predict(image_l[np.newaxis, ...])
     print(image_ab)
     image_ab = image_ab[0]
     image_lab[:, :, [1, 2]] = image_ab
@@ -65,4 +60,5 @@ def clear(plt):
 """
 Usage: python visualize.py
 """
-test("test_img.jpg")
+IMAGE_PATH = "test_images/test_image_1.jpg"
+test(IMAGE_PATH)

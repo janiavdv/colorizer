@@ -49,6 +49,8 @@ class Model():
         
         # Final resizing.
         self.mod = Conv2DTranspose(64, 3, activation="relu", padding="same")(self.mod)
+        self.mod = BatchNormalization()(self.mod)
+
         self.mod = Conv2DTranspose(2, 3, activation="sigmoid", padding="same")(self.mod)
         self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)
         self.mod = keras.Model(inputs=inp, outputs=self.mod)

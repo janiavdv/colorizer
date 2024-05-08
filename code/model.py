@@ -117,6 +117,8 @@ class Model():
         self.mod = keras.Model(inputs=inp, outputs=self.mod)
 
     def blur(self, img, kernel_size):
+        if type(img) != np.ndarray:
+            img = img.numpy()
         return gaussian(img, sigma=kernel_size)
    
     def percept_loss_func(self, truth, predicted):

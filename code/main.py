@@ -85,24 +85,25 @@ def main():
 
     datasets = Datasets('..'+os.sep+'data'+os.sep)
     print("Datasets compiled")
-    model = Model().mod
+    model = Model()
+    model_arch = model.mod
     checkpoint_path = "checkpoints" + os.sep + \
         "vgg19_model" + os.sep + timestamp + os.sep
     logs_path = "logs" + os.sep + "vgg19_model" + \
         os.sep + timestamp + os.sep
     
     # Print summaries for both parts of the model
-    model.summary()
+    model_arch.summary()
 
     if not os.path.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
     # Compile model graph
-    model.compile(
+    model_arch.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=hp.learning_rate),
-        loss=hp.loss_function,
-        metrics=[keras.metrics.MeanSquaredError()]
+        loss=model.percept_loss_func,
+        metrics=["accuracy"]
     )
-    train(model, datasets, checkpoint_path, logs_path, init_epoch)
+    train(model_arch, datasets, checkpoint_path, logs_path, init_epoch)
 
 # Make arguments global
 ARGS = parse_args()

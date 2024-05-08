@@ -1,27 +1,22 @@
 from skimage.io import imread
 import matplotlib.pyplot as plt
-from skimage.color import rgb2lab, lab2rgb, gray2rgb
+from skimage.color import rgb2lab, lab2rgb
 import numpy as np
 from skimage.io import imread
 from api import load_model
 
 MODEL = load_model()
 
-def test(image_path, out_dir="output"):
+def visualize_image(image_path):
     """
     Tests the model on image at path.
 
     Visualizes the original image (ground truth), grayscale image, and the predicted image.
     """
     img = imread(image_path)
-    # if image is graycale, convert to RGB
-    if len(img.shape) == 2:
-        image_rgb = gray2rgb(img)
-
     image_lab = rgb2lab(img)
     image_l = image_lab[:, :, [0, 0, 0]]
-    image_a_original = image_lab[:, :, [1]]
-    image_b_original = image_lab[:, :, [2]]
+
     # Run the model on image_l to get predicted ab channels
     image_ab = MODEL.predict(image_l[np.newaxis, ...])
     print(image_ab)
@@ -44,21 +39,8 @@ def test(image_path, out_dir="output"):
     plt.tight_layout()
     plt.show()
 
-    plt.imshow(image_ab[:, :, 0], cmap="gray")
-    plt.show()
-
-def clear(plt):
-    """
-    Clear the plot.
-    """
-    plt.figure().clear()
-    plt.close()
-    plt.cla()
-    plt.clf()
-
-
 """
 Usage: python visualize.py
 """
 IMAGE_PATH = "test_images/test_image_1.jpg"
-test(IMAGE_PATH)
+visualize_image(IMAGE_PATH)

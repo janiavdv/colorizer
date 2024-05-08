@@ -46,7 +46,7 @@ class Datasets:
         for im in dat:
             im = color.rgb2lab(im[0])
             # We return a light image (we just copy the same channel 3 times for VGG), and AB channel image.
-            yield ((im[:, :, :, [0, 0, 0]] + 128) / 255.0, (im[:, :, :, [1, 2]] + 128) / 255.0)
+            yield (im[:, :, :, [0, 0, 0]], im[:, :, :, [1, 2]])
 
     def preprocess_fun(self, img):
         """Preprocess function for ImageDataGenerator."""

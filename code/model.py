@@ -113,7 +113,7 @@ class Model():
         self.mod = BatchNormalization()(self.mod)
 
         self.mod = Conv2DTranspose(2, 3, activation="sigmoid", padding="same")(self.mod)
-        # self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)
+        self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)
         self.mod = keras.Model(inputs=inp, outputs=self.mod)
 
     def blur(self, img, kernel_size):

@@ -19,7 +19,7 @@ momentum = 0.01
 """
 Resize image size.
 """
-img_size = 256
+img_size = 224
 
 """
 Sample size for calculating the mean and standard deviation of the
@@ -43,7 +43,7 @@ batch_size = 64
 
 train_length = 328500
 test_length = 36500
-steps_per_epoch = (train_length // batch_size) // 32
-validation_steps = (test_length // batch_size) // 32
+steps_per_epoch = (train_length // batch_size) // 16
+validation_steps = (test_length // batch_size) // 16
 
 loss_function = "mean_squared_error"

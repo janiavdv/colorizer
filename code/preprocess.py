@@ -1,6 +1,7 @@
 import os
 import hyperparameters as hp
 from skimage import color
+from skimage.transform import resize
 import keras
 
 class Datasets:
@@ -24,6 +25,10 @@ class Datasets:
         data = keras.preprocessing.image.ImageDataGenerator(
             horizontal_flip=True,
             vertical_flip=True,
+            rotation_range=20,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            shear_range=0.2,
             preprocessing_function=self.preprocess_fun)
 
         data = data.flow_from_directory(
@@ -41,9 +46,11 @@ class Datasets:
         for im in dat:
             im = color.rgb2lab(im[0])
             # We return a light image (we just copy the same channel 3 times for VGG), and AB channel image.
-            yield (im[:, :, :, [0, 0, 0]], im[:, :, :, [1, 2]])
+            yield ((im[:, :, :, [0, 0, 0]] + 128) / 255.0, (im[:, :, :, [1, 2]] + 128) / 255.0)
 
     def preprocess_fun(self, img):
         """Preprocess function for ImageDataGenerator."""
         img = img / 255.0
+        # resize image to 224x224
+        img = resize(img, output_shape=(hp.img_size, hp.img_size, 3))
         return img

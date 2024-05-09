@@ -100,7 +100,7 @@ def main():
     # Compile model graph
     model_arch.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=hp.learning_rate),
-        loss=hp.loss_function,
+        loss=model.percept_loss_func,
         metrics=[keras.metrics.MeanSquaredError()]
     )
     train(model_arch, datasets, checkpoint_path, logs_path, init_epoch)

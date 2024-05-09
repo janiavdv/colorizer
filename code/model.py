@@ -7,7 +7,6 @@ import hyperparameters as hp
 import numpy as np
 from keras.losses import mean_squared_error as mse
 from skimage.filters import gaussian
-import tensorflow as tf
 
 class Model():
     def __init__(self):
@@ -114,7 +113,7 @@ class Model():
         self.mod = keras.Model(inputs=inp, outputs=self.mod)
 
     def blur(self, img, kernel_size):
-        img = tf.ones_like(img)
+        img = np.ones_like(img)
         return gaussian(img, sigma=(kernel_size, kernel_size), multichannel=True)
    
     def percept_loss_func(self, truth, predicted):

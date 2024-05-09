@@ -25,10 +25,7 @@ class Datasets:
         data = keras.preprocessing.image.ImageDataGenerator(
             horizontal_flip=True,
             vertical_flip=True,
-            rotation_range=20,
-            width_shift_range=0.2,
-            height_shift_range=0.2,
-            shear_range=0.2,
+            rotation_range=5,
             preprocessing_function=self.preprocess_fun)
 
         data = data.flow_from_directory(

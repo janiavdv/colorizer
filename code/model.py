@@ -6,7 +6,7 @@ from keras.layers import LeakyReLU
 import hyperparameters as hp
 import numpy as np
 from keras.losses import mean_squared_error as mse
-import tensorflow as tf
+from skimage.filters import gaussian
 
 class Model():
     def __init__(self):
@@ -113,14 +113,7 @@ class Model():
         self.mod = keras.Model(inputs=inp, outputs=self.mod)
 
     def blur(self, img, kernel_size):
-        batch_size, height, width, channels = img.shape
-        sigma = 0.3 * ((kernel_size - 1) * 0.5 - 1) + 0.8
-        gaussian_kernel = tf.image.get_gaussian_kernel(kernel_size, sigma, tf.float32)
-        gaussian_kernel = gaussian_kernel[:, tf.newaxis] * gaussian_kernel[tf.newaxis, :]
-        gaussian_kernel = gaussian_kernel[..., tf.newaxis, tf.newaxis]
-        gaussian_kernel = tf.tile(gaussian_kernel, [1, 1, channels, 1])
-        
-        return tf.nn.depthwise_conv2d(img, gaussian_kernel, [1, 1, 1, 1], padding="SAME")
+        return gaussian(img, sigma=(kernel_size, kernel_size), multichannel=True)
    
     def percept_loss_func(self, truth, predicted):
         truth_blur_3 = self.blur(truth, 3)

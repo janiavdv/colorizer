@@ -93,7 +93,7 @@ class Model():
 
         for block in block_layer_sizes:
             block_name = block[0]
-            b = Conv2DTranspose(filters=block[i][0], kernel_size=3, strides=block[i][1], activation="relu", padding="same")(self.mod)
+            b = Conv2DTranspose(filters=block[1][0], kernel_size=3, strides=block[1][1], activation="relu", padding="same")(self.mod)
             b = BatchNormalization()(b)
             for i in range(2, len(block)):
                 b = Conv2DTranspose(filters=512, kernel_size=3, strides=2, activation="relu", padding="same")(b)

@@ -7,20 +7,33 @@ from model import Model
 import hyperparameters as hp
 import tensorflow as tf
 
-def load_model(checkpoint="weights.h5"):
+def load_model(model="../models/model.h5"):
     """
     Load the model.
 
     Args:
-        checkpoint (str): The path to the checkpoint file.
+        model (str): The path to the model file.
 
     Returns:
         Model: The model.
     """
-    model = Model().mod
+    return tf.keras.models.load_model(model)
+
+def load_weights(weights):
+    """
+    Load the weights of the model.
+
+    Args:
+        weights (str): The path to the weights file.
+
+    Returns:
+        Model: The model with the loaded weights.
+    """
+    model = Model()
     model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
-    model.load_weights(checkpoint)
+    model.load_weights(weights)
     return model
+
 
 def resize_image(img, size=(hp.img_size, hp.img_size)):
     """

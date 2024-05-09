@@ -102,7 +102,7 @@ class Model():
             self.mod = concatenate([b, vgg19.get_layer(block_name).output])
 
         self.mod = Conv2DTranspose(2, 3, activation="sigmoid", padding="same")(self.mod)
-        self.mod = BatchNormalization(self.mod)
+        self.mod = BatchNormalization()(self.mod)
         self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)
         self.mod = keras.Model(inputs=inp, outputs=self.mod)
 

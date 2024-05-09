@@ -19,7 +19,7 @@ momentum = 0.01
 """
 Resize image size.
 """
-img_size = 224
+img_size = 256
 
 """
 Sample size for calculating the mean and standard deviation of the

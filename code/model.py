@@ -7,6 +7,7 @@ import hyperparameters as hp
 import numpy as np
 from keras.losses import mean_squared_error as mse
 from skimage.filters import gaussian
+import tensorflow as tf
 
 class Model():
     def __init__(self):
@@ -112,19 +113,35 @@ class Model():
         self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)
         self.mod = keras.Model(inputs=inp, outputs=self.mod)
 
-    def blur(self, img, kernel_size):
-        img = np.ones_like(img)
-        return gaussian(img, sigma=(kernel_size, kernel_size), multichannel=True)
+    def get_gaussian_kernel(self, shape=(3,3), sigma=0.5):
+        """build the gaussain filter"""
+        m,n = [(ss-1.)/2. for ss in shape]
+        x = tf.expand_dims(tf.range(-n,n+1,dtype=tf.float32),1)
+        y = tf.expand_dims(tf.range(-m,m+1,dtype=tf.float32),0)
+        h = tf.exp(tf.math.divide_no_nan(-((x*x) + (y*y)), 2*sigma*sigma))
+        h = tf.math.divide_no_nan(h,tf.reduce_sum(h))
+        return h
+
+    def gaussian_blur(self, inp, shape=(3,3), sigma=0.5):
+        """Convolve using tf.nn.depthwise_conv2d"""
+        in_channel = tf.shape(inp)[-1]
+        k = self.get_gaussian_kernel(shape,sigma)
+        k = tf.expand_dims(k,axis=-1)
+        k = tf.repeat(k,in_channel,axis=-1)
+        k = tf.reshape(k, (*shape, in_channel, 1))
+        # using padding same to preserve size (H,W) of the input
+        conv = tf.nn.depthwise_conv2d(inp, k, strides=[1,1,1,1],padding="SAME")
+        return conv
    
     def percept_loss_func(self, truth, predicted):
-        truth_blur_3 = self.blur(truth, 3)
-        truth_blur_5 = self.blur(truth, 5)
+        truth_blur_3 = self.gaussian_blur(truth)
+        truth_blur_5 = self.gaussian_blur(truth)
 
-        predicted_blur_3 = self.blur(predicted, 3)
-        predicted_blur_5 = self.blur(predicted, 5)
+        predicted_blur_3 = self.gaussian_blur(predicted)
+        predicted_blur_5 = self.gaussian_blur(predicted)
 
-        dist = mse(truth, predicted)
-        dist_3 = mse(truth_blur_3, predicted_blur_3)
-        dist_5 = mse(truth_blur_5, predicted_blur_5)
+        dist = mse(truth, predicted) ** 0.5
+        dist_3 = mse(truth_blur_3, predicted_blur_3) ** 0.5
+        dist_5 = mse(truth_blur_5, predicted_blur_5) ** 0.5
         
         return np.sum([dist, dist_3, dist_5]) / 3

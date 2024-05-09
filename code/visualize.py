@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from skimage.color import rgb2lab, lab2rgb
 import numpy as np
 from skimage.io import imread
-from api import load_model
+from util import load_model
 from skimage.transform import resize
 import hyperparameters as hp
 

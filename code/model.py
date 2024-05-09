@@ -134,14 +134,14 @@ class Model():
         return conv
    
     def percept_loss_func(self, truth, predicted):
-        truth_blur_3 = self.gaussian_blur(truth)
-        truth_blur_5 = self.gaussian_blur(truth)
+        truth_blur_3 = self.gaussian_blur(truth, (3,3))
+        truth_blur_5 = self.gaussian_blur(truth, (5,5))
 
-        predicted_blur_3 = self.gaussian_blur(predicted)
-        predicted_blur_5 = self.gaussian_blur(predicted)
+        predicted_blur_3 = self.gaussian_blur(predicted, (3,3))
+        predicted_blur_5 = self.gaussian_blur(predicted, (5,5))
 
         dist = mse(truth, predicted) ** 0.5
         dist_3 = mse(truth_blur_3, predicted_blur_3) ** 0.5
         dist_5 = mse(truth_blur_5, predicted_blur_5) ** 0.5
         
-        return np.sum([dist, dist_3, dist_5]) / 3
+        return (dist + dist_3 + dist_5) / 3

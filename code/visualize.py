@@ -43,8 +43,11 @@ def visualize_image(image_path):
     plt.tight_layout()
     plt.show()
 
+    plt.imshow(image_ab[:, :, 0], cmap="gray")
+    plt.show()
+
 """
 Usage: python visualize.py
 """
-IMAGE_PATH = "test_images/test_image_3.jpg"
+IMAGE_PATH = "test_images/test_image_1.jpg"
 visualize_image(IMAGE_PATH)

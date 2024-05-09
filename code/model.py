@@ -84,33 +84,22 @@ class Model():
         self.mod = vgg19.output
 
         block_layer_sizes = [
-            (512, "block5_conv3", 1),
-            (512, "block5_conv2", 1),
-            (512, "block5_conv1", 1),
-            (512, "block4_conv4", 2),
-            (512, "block4_conv3", 1),
-            (512, "block4_conv2", 1),
-            (512, "block4_conv1", 1),
-            (256, "block3_conv4", 2),
-            (256, "block3_conv3", 1),
-            (256, "block3_conv2", 1),
-            (256, "block3_conv1", 1),
-            (128, "block2_conv2", 2),
-            (128, "block2_conv1", 1),
-            (64, "block1_conv2", 2)
+            ["block5_conv4", (512, 2), (512, 1), (512, 1), (512, 1)],
+            ["block4_conv4", (512, 2), (512, 1), (512, 1), (512, 1)],
+            ["block3_conv4", (256, 2), (256, 1), (256, 1), (256, 1)],
+            ["block2_conv2", (128, 2), (128, 1)],
+            ["block2_conv2", (64, 2), (64, 1)]
         ]
-        b = Conv2DTranspose(filters=512, kernel_size=3, strides=2, activation="relu", padding="same")(self.mod)
-        b = BatchNormalization()(b)
-        self.mod = concatenate([b, vgg19.get_layer("block5_conv4").output])
 
-        for filters, layer_name, stride in block_layer_sizes:
-            b = Conv2DTranspose(filters=filters, kernel_size=3, strides=stride, activation="relu", padding="same")(self.mod)
+        for block in block_layer_sizes:
+            block_name = block[0]
+            b = Conv2DTranspose(filters=block[i][0], kernel_size=3, strides=block[i][1], activation="relu", padding="same")(self.mod)
             b = BatchNormalization()(b)
-            self.mod = concatenate([b, vgg19.get_layer(layer_name).output])
-        
-        # Final resizing.
-        self.mod = Conv2DTranspose(64, 3, strides=1, activation="relu", padding="same")(self.mod)
-        self.mod = BatchNormalization()(self.mod)
+            for i in range(2, len(block)):
+                b = Conv2DTranspose(filters=512, kernel_size=3, strides=2, activation="relu", padding="same")(b)
+                b = BatchNormalization()(b)
+            
+            self.mod = concatenate([b, vgg19.get_layer(block_name).output])
 
         self.mod = Conv2DTranspose(2, 3, activation="sigmoid", padding="same")(self.mod)
         self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)

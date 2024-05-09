@@ -84,9 +84,9 @@ class Model():
         self.mod = vgg19.output
 
         block_layer_sizes = [
-            ["block5_conv4", (512, 1), (512, 1), (512, 1), (512, 2)],
-            ["block4_conv4", (512, 1), (512, 1), (512, 1), (512, 2)],
-            ["block3_conv4", (256, 1), (256, 1), (256, 1), (256, 2)],
+            ["block5_conv4", (512, 1), (512, 2)],
+            ["block4_conv4", (512, 1), (512, 2)],
+            ["block3_conv4", (256, 1), (256, 2)],
             ["block2_conv2", (128, 1), (128, 2)],
             ["block1_conv2", (64, 1), (64, 2)]
         ]
@@ -102,6 +102,7 @@ class Model():
             self.mod = concatenate([b, vgg19.get_layer(block_name).output])
 
         self.mod = Conv2DTranspose(2, 3, activation="sigmoid", padding="same")(self.mod)
+        self.mod = BatchNormalization(self.mod)
         self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)
         self.mod = keras.Model(inputs=inp, outputs=self.mod)
 

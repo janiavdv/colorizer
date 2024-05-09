@@ -24,7 +24,6 @@ class Datasets:
         """
         data = keras.preprocessing.image.ImageDataGenerator(
             horizontal_flip=True,
-            vertical_flip=True,
             preprocessing_function=self.preprocess_fun)
 
         data = data.flow_from_directory(

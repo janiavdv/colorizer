@@ -4,6 +4,8 @@ from skimage.color import rgb2lab, lab2rgb
 import numpy as np
 from skimage.io import imread
 from api import load_model
+from skimage.transform import resize
+import hyperparameters as hp
 
 MODEL = load_model()
 
@@ -14,6 +16,8 @@ def visualize_image(image_path):
     Visualizes the original image (ground truth), grayscale image, and the predicted image.
     """
     img = imread(image_path)
+    img = resize(img, output_shape=(hp.img_size, hp.img_size, 3))
+    img / 255.0
     image_lab = rgb2lab(img)
     image_l = image_lab[:, :, [0, 0, 0]]
 
@@ -42,5 +46,5 @@ def visualize_image(image_path):
 """
 Usage: python visualize.py
 """
-IMAGE_PATH = "test_images/test_image_1.jpg"
+IMAGE_PATH = "test_images/test_image_3.jpg"
 visualize_image(IMAGE_PATH)

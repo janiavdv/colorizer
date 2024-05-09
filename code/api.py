@@ -107,7 +107,7 @@ def rgb_to_byte_arr(img_rgb):
     Args:
         img_rgb (np.array): The RGB image.
     
-    Returns:
+    Returns: 
         io.BytesIO: The byte array.
     """
     img_rgb = (img_rgb * 255).astype(np.uint8)

@@ -23,9 +23,8 @@ class Datasets:
         Gets the data at path, augments it for flips. Generates the data.
         """
         data = keras.preprocessing.image.ImageDataGenerator(
-            # horizontal_flip=True,
-            # vertical_flip=True,
-            # rotation_range=5,
+            horizontal_flip=True,
+            vertical_flip=True,
             preprocessing_function=self.preprocess_fun)
 
         data = data.flow_from_directory(

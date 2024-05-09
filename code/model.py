@@ -82,27 +82,28 @@ class Model():
         =================================================================
         """
         self.mod = vgg19.output
+        b = Conv2DTranspose(filters=512, kernel_size=3, strides=2, activation="relu", padding="same")(self.mod)
+        b = BatchNormalization()(b)
+        self.mod = concatenate([b, vgg19.get_layer("block5_conv4").output])
 
         block_layer_sizes = [
-            ["block5_conv4", (512, 1), (512, 2)],
-            ["block4_conv4", (512, 1), (512, 2)],
-            ["block3_conv4", (256, 1), (256, 2)],
-            ["block2_conv2", (128, 1), (128, 2)],
-            ["block1_conv2", (64, 1), (64, 2)]
+            (512, "block4_conv4"),
+            (256, "block3_conv4"),
+            (128, "block2_conv2"),
+            (64, "block1_conv2")
         ]
 
-        for block in block_layer_sizes:
-            block_name = block[0]
-            b = Conv2DTranspose(filters=block[1][0], kernel_size=3, strides=block[1][1], activation="relu", padding="same")(self.mod)
+        for filters, layer_name in block_layer_sizes:
+            b = Conv2DTranspose(filters=filters, kernel_size=3, strides=1, activation="relu", padding="same")(self.mod)
             b = BatchNormalization()(b)
-            for i in range(2, len(block)):
-                b = Conv2DTranspose(filters=block[i][0], kernel_size=3, strides=block[i][1], activation="relu", padding="same")(b)
-                b = BatchNormalization()(b)
-            
-            self.mod = concatenate([b, vgg19.get_layer(block_name).output])
+            b = Conv2DTranspose(filters=filters, kernel_size=3, strides=2, activation="relu", padding="same")(b)
+            b = BatchNormalization()(b)
+           
+            self.mod = concatenate([b, vgg19.get_layer(layer_name).output])
 
-        self.mod = Conv2DTranspose(2, 3, activation="sigmoid", padding="same")(self.mod)
+        self.mod = Conv2DTranspose(64, 3, activation="relu", padding="same")(self.mod)
         self.mod = BatchNormalization()(self.mod)
+        self.mod = Conv2DTranspose(2, 3, activation="sigmoid", padding="same")(self.mod)
         self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)
         self.mod = keras.Model(inputs=inp, outputs=self.mod)
 

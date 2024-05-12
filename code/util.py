@@ -29,7 +29,7 @@ def load_weights(weights):
     Returns:
         Model: The model with the loaded weights.
     """
-    model = Model()
+    model = Model().mod
     model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
     model.load_weights(weights)
     return model

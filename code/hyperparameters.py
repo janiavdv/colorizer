@@ -40,10 +40,15 @@ Defines the number of training examples per batch.
 """
 batch_size = 64
 
-
+"""
+Computing number of steps to take at each epoch.
+"""
 train_length = 328500
 test_length = 36500
 steps_per_epoch = (train_length // batch_size) // 32
 validation_steps = (test_length // batch_size) // 32
 
+"""
+Defines our preferred (default) loss function.
+"""
 loss_function = "mean_squared_error"

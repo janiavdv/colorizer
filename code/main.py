@@ -25,7 +25,6 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
-    
     parser.add_argument(
         '--load-checkpoint',
         default=None,

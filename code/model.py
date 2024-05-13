@@ -36,23 +36,27 @@ class Model():
         ]
 
         for filters, layer_name in block_layer_sizes:
-            b = Conv2DTranspose(filters=filters, kernel_size=3, strides=1, activation=None, padding="same")(self.mod)
+            b = Conv2DTranspose(filters=filters, kernel_size=3, strides=1, padding="same")(self.mod)
             b = LeakyReLU(alpha=0.1)(b)
             b = BatchNormalization()(b)
-            b = Conv2DTranspose(filters=filters, kernel_size=3, strides=2, activation=None, padding="same")(b)
+            b = Conv2DTranspose(filters=filters, kernel_size=3, strides=2, padding="same")(b)
             b = LeakyReLU(alpha=0.1)(b)
             b = BatchNormalization()(b)
            
             self.mod = concatenate([b, vgg19.get_layer(layer_name).output])
 
-        self.mod = Conv2DTranspose(64, 3, activation=None, padding="same")(self.mod)
+        self.mod = Conv2DTranspose(64, 3, padding="same")(self.mod)
         self.mod = LeakyReLU(alpha=0.1)(self.mod)
         self.mod = BatchNormalization()(self.mod)
         self.mod = Conv2DTranspose(2, 3, activation="sigmoid", padding="same")(self.mod)
         self.mod = Rescaling(scale=255.0, offset=-128)(self.mod)
         self.mod = keras.Model(inputs=inp, outputs=self.mod)
    
-    def percept_loss_func(self, truth, predicted):
+    def perceptual_loss(self, truth, predicted):
+        """
+        Calculates the perceptual loss between the truth and predicted images.
+        """
+
         truth_blur_3 = blur(truth, (3,3))
         truth_blur_5 = blur(truth, (5,5))
 

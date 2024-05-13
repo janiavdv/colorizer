@@ -4,22 +4,18 @@ Homework 5 - CNNs
 CS1430 - Computer Vision
 Brown University
 
-Edited by Jania Vandevoorde for final project. 
+RGBaddies Reworked.
 """
 
 import os
 import argparse
-import re
 from datetime import datetime
 import tensorflow as tf
-
+import keras
 import hyperparameters as hp
 from model import Model
 from preprocess import Datasets
 from tensorboard_utils import CustomModelSaver
-
-from matplotlib import pyplot as plt
-import keras
 
 def parse_args():
     """ Perform command-line argument parsing. """
@@ -27,12 +23,6 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Let's colorize some images!",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    
-    parser.add_argument(
-        '--data',
-        default='..'+os.sep+'data'+os.sep,
-        help='Location where the dataset is stored.'
     )
     
     parser.add_argument(
@@ -67,18 +57,17 @@ def train(model, datasets, checkpoint_path="checkpoints/", logs_path="logs/", in
     ]
 
     # Begin training
-    model.fit(
-        x=datasets.train_data,
-        validation_data=datasets.test_data,
-        epochs=hp.num_epochs,
-        initial_epoch=init_epoch,
-        callbacks=callback_list
-    ) # TODO: do we need to specify batch size here?
-
+    model.fit(datasets.train_data,
+          batch_size=hp.batch_size,
+          epochs=hp.num_epochs,
+          validation_data=datasets.test_data,
+          steps_per_epoch=hp.steps_per_epoch,
+          validation_steps=hp.validation_steps,
+          callbacks=callback_list
+    )
 
 def test(model, test_data):
     """ Testing routine. """
-
     # Run model on test set
     model.evaluate(
         x=test_data,
@@ -93,43 +82,27 @@ def main():
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
     init_epoch = 0
 
-    # If loading from a checkpoint, the loaded checkpoint's directory
-    # will be used for future checkpoints
-    if ARGS.load_checkpoint:
-        ARGS.load_checkpoint = os.path.abspath(ARGS.load_checkpoint)
-
-        # Get timestamp and epoch from filename
-        regex = r"(?:.+)(?:\.e)(\d+)(?:.+)(?:.h5)"
-        init_epoch = int(re.match(regex, ARGS.load_checkpoint).group(1)) + 1
-        timestamp = os.path.basename(os.path.dirname(ARGS.load_checkpoint))
-
-    datasets = Datasets(ARGS.data)
-
+    datasets = Datasets('..'+os.sep+'data'+os.sep)
+    print("Datasets compiled")
     model = Model()
-    model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+    model_arch = model.mod
     checkpoint_path = "checkpoints" + os.sep + \
-        "model" + os.sep + timestamp + os.sep
-    logs_path = "logs" + os.sep + "model" + \
+        "vgg19_model" + os.sep + timestamp + os.sep
+    logs_path = "logs" + os.sep + "vgg19_model" + \
         os.sep + timestamp + os.sep
+    
+    # Print summaries for both parts of the model
+    model_arch.summary()
 
-    # Print summary of model
-    # model.summary()
-
-    # Load checkpoints
-    if ARGS.load_checkpoint:
-        model.load_weights(ARGS.load_checkpoint, by_name=False)
-
+    if not os.path.exists(checkpoint_path):
+        os.makedirs(checkpoint_path)
     # Compile model graph
-    model.compile(
-        optimizer=model.optimizer,
-        loss=model.loss_fn,
+    model_arch.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=hp.learning_rate),
+        loss=model.percept_loss_func,
         metrics=[keras.metrics.MeanSquaredError()]
     )
-
-    if ARGS.evaluate:
-        test(model, datasets.test_data)
-    else:
-        train(model, datasets, checkpoint_path, logs_path, init_epoch)
+    train(model_arch, datasets, checkpoint_path, logs_path, init_epoch)
 
 # Make arguments global
 ARGS = parse_args()

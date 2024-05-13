@@ -4,7 +4,7 @@ Homework 5 - CNNs
 CS1430 - Computer Vision
 Brown University
 
-Edited by Jania Vandevoorde for final project. 
+RGBaddies Reworked. 
 """
 
 import os
@@ -14,7 +14,7 @@ import tensorflow as tf
 class CustomModelSaver(tf.keras.callbacks.Callback):
     """ Custom Keras callback for saving weights of networks. """
 
-    def __init__(self, checkpoint_dir, max_num_weights=100):
+    def __init__(self, checkpoint_dir, max_num_weights=30):
         super(CustomModelSaver, self).__init__()
 
         self.checkpoint_dir = checkpoint_dir
@@ -28,28 +28,21 @@ class CustomModelSaver(tf.keras.callbacks.Callback):
 
         cur_acc = logs["val_mean_squared_error"]
 
-        # Only save weights if test accuracy exceeds the previous best
-        # weight file
-        if cur_acc > max_acc:
-            save_name = "weights.e{0:03d}-acc{1:.4f}.h5".format(
-                epoch, cur_acc)
+        # Save all best.
+        save_name = "weights.e{0:03d}-acc{1:.4f}.h5".format(
+            epoch, cur_acc)
 
-            save_location = self.checkpoint_dir + os.sep + save_name
-            print(("\nEpoch {0:03d} TEST accuracy ({1:.4f}) EXCEEDED previous "
-                    "maximum TEST accuracy.\nSaving checkpoint at {location}")
-                    .format(epoch + 1, cur_acc, location = save_location))
-            self.model.save_weights(save_location)
+        save_location = self.checkpoint_dir + os.sep + save_name
+        print(("\nEpoch {0:03d} TEST accuracy ({1:.4f}) "
+                ".\nSaving checkpoint at {location}")
+                .format(epoch + 1, cur_acc, location = save_location))
+        self.model.save_weights(save_location)
 
-            # Ensure max_num_weights is not exceeded by removing
-            # minimum weight
-            if self.max_num_weights > 0 and \
-                    num_weights + 1 > self.max_num_weights:
-                os.remove(self.checkpoint_dir + os.sep + min_acc_file)
-        else:
-            print(("\nEpoch {0:03d} TEST accuracy ({1:.4f}) DID NOT EXCEED "
-                   "previous maximum TEST accuracy.\nNo checkpoint was "
-                   "saved").format(epoch + 1, cur_acc))
-
+        # Ensure max_num_weights is not exceeded by removing
+        # minimum weight
+        if self.max_num_weights > 0 and \
+                num_weights + 1 > self.max_num_weights:
+            os.remove(self.checkpoint_dir + os.sep + min_acc_file)
 
     def scan_weight_files(self):
         """ Scans checkpoint directory to find current minimum and maximum

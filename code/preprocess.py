@@ -1,140 +1,51 @@
 import os
-import random
-import numpy as np
-from PIL import Image
-import tensorflow as tf
 import hyperparameters as hp
 from skimage import color
-import matplotlib.pyplot as plt
+from skimage.transform import resize
+import keras
 
-class Datasets():
-    """ Class for containing the training and test sets as well as
-    other useful data-related information. Contains the functions
-    for preprocessing.
+class Datasets:
+    """
+    Class for containing the training and test sets, as well as other data related functions.
     """
 
     def __init__(self, data_path):
+        """
+        Initialize the Dataset object.
+        """
         self.data_path = data_path
 
-        # Mean and std for standardization
-        self.mean = np.zeros((hp.img_size,hp.img_size,3))
-        self.std = np.ones((hp.img_size,hp.img_size,3))
-        self.calc_mean_and_std()
+        self.train_data = self.get_data(os.path.join(self.data_path, "train/"))
+        self.test_data = self.get_data(os.path.join(self.data_path, "test/"))   
 
-        # Setup data generators
-        # These feed data to the training and testing routine based on the dataset
-        print("DEBUG -- TRAIN FILE PATH:", os.path.join(self.data_path, "train/"))
-        print("DEBUG -- TEST FILE PATH:", os.path.join(self.data_path, "test/"))
-        self.train_data = self.get_data(os.path.join(self.data_path, "train/"), True)
-        self.test_data = self.get_data(os.path.join(self.data_path, "test/"), False)   
-             
-    def calc_mean_and_std(self):
-        """ Calculate mean and standard deviation of a sample of the
-        training dataset for standardization.
-
-        Arguments: none
-
-        Returns: none
+    def get_data(self, path):
         """
-
-        # Get list of all images in training directory
-        file_list = []
-        for root, _, files in os.walk(os.path.join(self.data_path, "train/")):
-            for name in files:
-                if name.endswith(".jpeg"):
-                    file_list.append(os.path.join(root, name))
-
-        # Shuffle filepaths
-        random.shuffle(file_list)
-
-        # Take sample of file paths
-        file_list = file_list[:hp.preprocess_sample_size]
-
-        # Allocate space in memory for images
-        data_sample = np.zeros(
-            (hp.preprocess_sample_size, hp.img_size, hp.img_size, 3))
-
-        # Import images
-        for i, file_path in enumerate(file_list):
-            img = Image.open(file_path)
-            img = img.resize((hp.img_size, hp.img_size))
-            img = np.array(img, dtype=np.float32)
-            img /= 255.
-
-            # Grayscale -> RGB
-            if len(img.shape) == 2:
-                img = np.stack([img, img, img], axis=-1)
-            
-            data_sample[i] = img[:,:,:3]
-
-        self.mean = np.mean(data_sample, axis=0)
-        self.std = np.std(data_sample, axis=0)
-
-
-    def standardize(self, img):
-        """ Function for applying standardization to an input image.
-
-        Arguments:
-            img - numpy array of shape (image size, image size, 3)
-
-        Returns:
-            img - numpy array of shape (image size, image size, 3)
+        Gets the data at path, augments it for flips. Generates the data.
         """
-        # Calculating standardized image.
-        
-        img = img[:, :, :3]
-        
-        img = (img - self.mean) / self.std
+        data = keras.preprocessing.image.ImageDataGenerator(
+            horizontal_flip=True,
+            preprocessing_function=self.preprocess_fun)
 
+        data = data.flow_from_directory(
+            path,
+            target_size=(hp.img_size, hp.img_size),
+            batch_size=hp.batch_size,
+            shuffle=False,
+        )
+        return self.rgb_to_lab(data)
+
+    def rgb_to_lab(self, dat):
+        """
+        Converts the RGB data to L+AB data.
+        """
+        for im in dat:
+            im = color.rgb2lab(im[0])
+            # We return a light image (we just copy the same channel 3 times for VGG), and AB channel image.
+            yield (im[:, :, :, [0, 0, 0]], im[:, :, :, [1, 2]])
+
+    def preprocess_fun(self, img):
+        """Preprocess function for ImageDataGenerator."""
+        img = img / 255.0
+        # resize image to 224x224
+        img = resize(img, output_shape=(hp.img_size, hp.img_size, 3))
         return img
-
-    def get_data(self, path, shuffle):
-        """ Returns an image data generator which can be iterated
-        through for images and corresponding class labels.
-
-        Arguments:
-            path - Filepath of the data being imported, such as
-                   "../data/train" or "../data/test"
-
-        Returns:
-            An iterable image-batch generator
-        """
-        file_paths = []
-        for root, _, files in os.walk(path):
-            for name in files:
-                if name.endswith(".jpeg"):
-                    file_paths.append(os.path.join(root, name)) 
-
-        lab_imgs = []
-        ab_imgs = []
-        for i, file_path in enumerate(file_paths):
-            img = Image.open(file_path)
-            img = img.resize((hp.img_size, hp.img_size))
-            img = np.array(img, dtype=np.float32)
-            
-            # TODO: do we need to standardize & normalize?
-            if len(img.shape) == 2:
-                img = np.stack([img, img, img], axis=-1)
-            img = self.standardize(img)
-            img /= 255
-           
-                        
-            l, ab = self.rgb_to_lab(img)
-            lab_imgs.append((l, ab))
-
-        return lab_imgs
-
-    def rgb_to_lab(self, rgb_img):
-        """ Converts a RGB image to Lab image
-
-        Arguments:
-            rgb_img - rgb image matrix
-        
-        Returns:
-            lab image, as tuple (l, ab)
-        """
-        lab_img = color.rgb2lab(rgb_img)
-        l = lab_img[:, :, 0]
-        ab = lab_img[:, :, 1:]
-
-        return (l, ab)

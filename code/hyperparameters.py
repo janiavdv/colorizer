@@ -12,21 +12,9 @@ optimizer is used. Refer to the default learning rate parameter
 learning_rate = 1e-2
 
 """
-Momentum on the gradient (if you use a momentum-based optimizer)
-"""
-momentum = 0.01
-
-"""
 Resize image size.
 """
 img_size = 224
-
-"""
-Sample size for calculating the mean and standard deviation of the
-training data. This many images will be randomly seleted to be read
-into memory temporarily.
-"""
-preprocess_sample_size = 400
 
 """
 Maximum number of weight files to save to checkpoint directory. If
@@ -47,8 +35,3 @@ train_length = 328500
 test_length = 36500
 steps_per_epoch = (train_length // batch_size) // 32
 validation_steps = (test_length // batch_size) // 32
-
-"""
-Defines our preferred (default) loss function.
-"""
-loss_function = "mean_squared_error"

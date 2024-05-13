@@ -1,3 +1,12 @@
+"""
+Originally for
+Homework 5 - CNNs
+CS1430 - Computer Vision
+Brown University
+
+RGBaddies Reworked. 
+"""
+
 import os
 import hyperparameters as hp
 from skimage import color

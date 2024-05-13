@@ -1,13 +1,10 @@
 """
-Number of epochs. We as you to use only 50 epochs as your budget.
-If you experiment with more complex networks, you can change this.
+Number of epochs to train the model for.
 """
 num_epochs = 50
 
 """
-A critical parameter that can dramatically affect whether training
-succeeds or fails. The value for this depends significantly on which
-optimizer is used. Refer to the default learning rate parameter
+Learning rate for the optimizer.
 """
 learning_rate = 1e-2
 
@@ -29,7 +26,7 @@ Defines the number of training examples per batch.
 batch_size = 64
 
 """
-Computing number of steps to take at each epoch.
+Number of steps per epoch.
 """
 train_length = 328500
 test_length = 36500
